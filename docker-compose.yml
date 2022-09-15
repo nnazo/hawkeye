@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  hawkeyedb:
+    container_name: hawkeyedb
+    image: postgres:14
+    volumes:
+      - hawkeyedb:/var/lib/postgresql/data
+    ports:
+      - 5433:5432
+    environment:
+      - POSTGRES_DB=hawkeyedb
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=secret
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d hawkeyedb -U root"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  hawkeyedb-migration:
+    container_name: hawkeyedb-migration
+    build: ./migration
+    environment:
+      - DATABASE_URL=postgresql://root:secret@hawkeyedb:5432/hawkeyedb
+    depends_on:
+      hawkeyedb:
+        condition: service_healthy
+
+  hawkeye:
+    container_name: hawkeye
+    build:
+      context: .
+    depends_on:
+      hawkeyedb:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://root:secret@hawkeyedb:5432/hawkeyedb
+      - NATALIE_WEBHOOK_URL=https://some-webhook-url.com
+      - BROWSER_DRIVER_URL=http://localhost:4444
+
+volumes:
+  hawkeyedb:
