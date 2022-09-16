@@ -8,12 +8,10 @@ services:
       - hawkeyedb:/var/lib/postgresql/data
     ports:
       - 5433:5432
-    environment:
-      - POSTGRES_DB=hawkeyedb
-      - POSTGRES_USER=root
-      - POSTGRES_PASSWORD=secret
+    env_file:
+      - .env
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -d hawkeyedb -U root"]
+      test: ["CMD-SHELL", "pg_isready -d ${POSTGRES_DB} -U ${POSTGRES_USER}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -21,11 +19,11 @@ services:
   hawkeyedb-migration:
     container_name: hawkeyedb-migration
     build: ./migration
-    environment:
-      - DATABASE_URL=postgresql://root:secret@hawkeyedb:5432/hawkeyedb
     depends_on:
       hawkeyedb:
         condition: service_healthy
+    env_file:
+      - .env
 
   hawkeye:
     container_name: hawkeye
@@ -34,10 +32,8 @@ services:
     depends_on:
       hawkeyedb:
         condition: service_healthy
-    environment:
-      - DATABASE_URL=postgresql://root:secret@hawkeyedb:5432/hawkeyedb
-      - NATALIE_WEBHOOK_URL=https://some-webhook-url.com
-      - BROWSER_DRIVER_URL=http://localhost:4444
+    env_file:
+      - .env
 
 volumes:
   hawkeyedb:
