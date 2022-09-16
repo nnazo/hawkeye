@@ -9,16 +9,16 @@ use sea_orm::{ActiveValue::NotSet, ColumnTrait, EntityTrait, QueryFilter, QueryS
 use serenity::{model::prelude::Embed, utils::Color};
 use tokio::time::{self, Duration};
 
-mod select;
-use select::*;
+mod selector;
+use selector::fetch_and_select;
 
 mod natalie;
-use natalie::*;
+use natalie::{Article, NATALIE_SELECTOR, NATALIE_URLS};
 
 mod webhook;
 
 mod util;
-use util::*;
+use util::Context;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -68,15 +68,15 @@ async fn fetch_and_notify(ctx: &mut Context, i: usize) -> Result<()> {
     .exec(&ctx.db)
     .await?;
 
-    for article in new_articles.iter() {
+    for article in &new_articles {
         webhook::send(
-            &ctx,
+            ctx,
             Embed::fake(|e| {
                 e.url(&article.url)
                     .title(&article.title)
                     .description(&article.summary)
                     .thumbnail(&article.image_url)
-                    .color(Color::from_rgb(2, 169, 255))
+                    .color(Color::from_rgb(88, 255, 93))
             }),
         )
         .await?;

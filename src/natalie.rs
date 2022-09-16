@@ -1,9 +1,9 @@
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 
-use crate::select::{DataSelector, ElementSelector, UpdateFromSelected};
+use crate::selector::{self, UpdateFromData};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Article {
     pub url: String,
     pub image_url: String,
@@ -12,26 +12,16 @@ pub struct Article {
     pub date: String,
 }
 
-impl UpdateFromSelected for Article {
-    fn new() -> Self {
-        Article {
-            url: "".into(),
-            image_url: "".into(),
-            title: "".into(),
-            summary: "".into(),
-            date: "".into(),
-        }
-    }
-
-    fn update(&mut self, selector: Option<&str>, r#type: &DataSelector, value: String) {
+impl UpdateFromData for Article {
+    fn update_from_data(&mut self, selector: Option<&str>, r#type: &selector::Data, value: String) {
         match (selector, r#type) {
-            (None, DataSelector::Attribute(attr)) if attr == "href" => self.url = value,
-            (Some("img"), DataSelector::Attribute(attr)) if attr == "data-src" => {
-                self.image_url = value
+            (None, selector::Data::Attribute(attr)) if attr == "href" => self.url = value,
+            (Some("img"), selector::Data::Attribute(attr)) if attr == "data-src" => {
+                self.image_url = value;
             }
-            (Some(".NA_card_text .NA_card_title"), DataSelector::Text) => self.title = value,
-            (Some(".NA_card_text .NA_card_summary"), DataSelector::Text) => self.summary = value,
-            (Some(".NA_card_text .NA_card_date"), DataSelector::Text) => self.date = value,
+            (Some(".NA_card_text .NA_card_title"), selector::Data::Text) => self.title = value,
+            (Some(".NA_card_text .NA_card_summary"), selector::Data::Text) => self.summary = value,
+            (Some(".NA_card_text .NA_card_date"), selector::Data::Text) => self.date = value,
             _ => {}
         }
     }
@@ -46,37 +36,37 @@ pub const NATALIE_URLS: [&str; 3] = [
     "https://natalie.mu/comic/tag/59",
 ];
 
-pub static NATALIE_SELECTOR: Lazy<ElementSelector> = Lazy::new(|| ElementSelector {
+pub static NATALIE_SELECTOR: Lazy<selector::Element> = Lazy::new(|| selector::Element {
     selector: "main".into(),
     data: None,
-    children: Some(vec![ElementSelector {
+    children: Some(vec![selector::Element {
         selector: ".NA_section-list".into(),
         data: None,
-        children: Some(vec![ElementSelector {
+        children: Some(vec![selector::Element {
             selector: ".NA_card_wrapper".into(),
             data: None,
-            children: Some(vec![ElementSelector {
+            children: Some(vec![selector::Element {
                 selector: ".NA_card-l > a".into(),
-                data: Some(vec![DataSelector::Attribute("href".into())]),
+                data: Some(vec![selector::Data::Attribute("href".into())]),
                 children: Some(vec![
-                    ElementSelector {
+                    selector::Element {
                         selector: "img".into(),
-                        data: Some(vec![DataSelector::Attribute("data-src".into())]),
+                        data: Some(vec![selector::Data::Attribute("data-src".into())]),
                         children: None,
                     },
-                    ElementSelector {
+                    selector::Element {
                         selector: ".NA_card_text .NA_card_title".into(),
-                        data: Some(vec![DataSelector::Text]),
+                        data: Some(vec![selector::Data::Text]),
                         children: None,
                     },
-                    ElementSelector {
+                    selector::Element {
                         selector: ".NA_card_text .NA_card_summary".into(),
-                        data: Some(vec![DataSelector::Text]),
+                        data: Some(vec![selector::Data::Text]),
                         children: None,
                     },
-                    ElementSelector {
+                    selector::Element {
                         selector: ".NA_card_text .NA_card_date".into(),
-                        data: Some(vec![DataSelector::Text]),
+                        data: Some(vec![selector::Data::Text]),
                         children: None,
                     },
                 ]),
