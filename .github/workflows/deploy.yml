@@ -13,6 +13,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      
+      - name: Image Metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: |
+            ${{ secrets.MIGRATION_DOCKER_IMAGE }}
+          tags: |
+            type=sha
 
       - name: Login to DockerHub
         uses: docker/login-action@v2
@@ -20,12 +29,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push migration
+      - name: Build and push
         uses: docker/build-push-action@v3
         with:
           push: true
           context: migration 
-          tags: ${{ secrets.MIGRATION_DOCKER_IMAGE }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
 
   hawkeye:
     name: Build & Push
@@ -33,6 +43,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Image Metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: |
+            ${{ secrets.DOCKER_IMAGE }}
+          tags: |
+            type=sha
 
       - name: Login to DockerHub
         uses: docker/login-action@v2
@@ -45,4 +64,5 @@ jobs:
         with:
           push: true
           context: .
-          tags: ${{ secrets.DOCKER_IMAGE }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
