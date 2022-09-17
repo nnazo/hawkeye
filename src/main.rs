@@ -6,7 +6,6 @@ use anyhow::Result;
 use hawkeye_entity as entity;
 use hawkeye_entity::prelude::Article as ArticleEntity;
 use sea_orm::{ActiveValue::NotSet, ColumnTrait, EntityTrait, QueryFilter, QuerySelect, Set};
-use serenity::{model::prelude::Embed, utils::Color};
 use tokio::time::{self, Duration};
 
 mod selector;
@@ -22,14 +21,14 @@ use util::Context;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let mut ctx = Context::new_from_env().await?;
+    let ctx = Context::new_from_env().await?;
 
     let mut interval = time::interval(Duration::from_secs(60));
     let mut i = 0;
     loop {
         interval.tick().await;
 
-        if let Err(err) = fetch_and_notify(&mut ctx, i).await {
+        if let Err(err) = fetch_and_notify(&ctx, i).await {
             eprintln!("{err:?}");
         }
 
@@ -37,7 +36,7 @@ async fn main() -> Result<()> {
     }
 }
 
-async fn fetch_and_notify(ctx: &mut Context, i: usize) -> Result<()> {
+async fn fetch_and_notify(ctx: &Context, i: usize) -> Result<()> {
     let articles = fetch_and_select::<Article>(NATALIE_URLS[i], &NATALIE_SELECTOR).await?;
     let urls = articles.iter().map(|a| &*a.url);
     let posted_articles: HashSet<_> = ArticleEntity::find()
@@ -55,31 +54,24 @@ async fn fetch_and_notify(ctx: &mut Context, i: usize) -> Result<()> {
         .filter(|article| !posted_articles.contains(&article.url))
         .collect::<Vec<_>>();
 
-    ArticleEntity::insert_many(
-        new_articles
-            .iter()
-            .map(|article| entity::article::ActiveModel {
-                id: NotSet,
-                uid: Set(uuid::Uuid::new_v4()),
-                url: Set(article.url.clone()),
-                created_at: Set(chrono::offset::Utc::now().into()),
-            }),
-    )
-    .exec(&ctx.db)
-    .await?;
+    let article_entities = new_articles
+        .iter()
+        .map(|article| entity::article::ActiveModel {
+            id: NotSet,
+            uid: Set(uuid::Uuid::new_v4()),
+            url: Set(article.url.clone()),
+            created_at: Set(chrono::offset::Utc::now().into()),
+        })
+        .collect::<Vec<_>>();
+
+    if !article_entities.is_empty() {
+        ArticleEntity::insert_many(article_entities)
+            .exec(&ctx.db)
+            .await?;
+    }
 
     for article in &new_articles {
-        webhook::send(
-            ctx,
-            Embed::fake(|e| {
-                e.url(&article.url)
-                    .title(&article.title)
-                    .description(&article.summary)
-                    .thumbnail(&article.image_url)
-                    .color(Color::from_rgb(88, 255, 93))
-            }),
-        )
-        .await?;
+        webhook::send(ctx, article.embed()).await?;
     }
 
     Ok(())

@@ -1,5 +1,6 @@
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
+use serenity::{json::Value, model::prelude::Embed, utils::Color};
 
 use crate::selector::{self, UpdateFromData};
 
@@ -10,6 +11,18 @@ pub struct Article {
     pub title: String,
     pub summary: String,
     pub date: String,
+}
+
+impl Article {
+    pub fn embed(&self) -> Value {
+        Embed::fake(|e| {
+            e.url(&self.url)
+                .title(&self.title)
+                .description(&self.summary)
+                .thumbnail(&self.image_url)
+                .color(Color::from_rgb(88, 255, 93))
+        })
+    }
 }
 
 impl UpdateFromData for Article {
