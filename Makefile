@@ -17,3 +17,6 @@ bootstrap:
 	minikube addons enable default-storageclass
 	minikube addons enable storage-provisioner
 	kubectl create namespace hawkeye
+
+psql:
+	kubectl -n hawkeye exec -it $$(kubectl -n hawkeye get pods | grep hawkeyedb-0 | awk '{ print $$1 }') -- psql -U $(POSTGRES_USER) -d $(POSTGRES_DB)
