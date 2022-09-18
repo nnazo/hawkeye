@@ -19,6 +19,7 @@ services:
   hawkeyedb-migration:
     container_name: hawkeyedb-migration
     build: ./migration
+    image: hawkeyedb-migration:${VERSION}
     depends_on:
       hawkeyedb:
         condition: service_healthy
@@ -29,6 +30,7 @@ services:
     container_name: hawkeye
     build:
       context: .
+    image: hawkeye:${VERSION}
     depends_on:
       hawkeyedb:
         condition: service_healthy

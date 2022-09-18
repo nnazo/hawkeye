@@ -1,2 +1,11 @@
+.github
 migration/target
 target
+.env
+.env.example
+chart
+README.md
+LICENSE*
+docker-compose.yml
+minikube-build.sh
+Makefile

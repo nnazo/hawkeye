@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.hawkeye.name }}-deployment
+  labels:
+    app: {{ .Values.hawkeye.name }}
+spec:
+  replicas: {{ .Values.hawkeye.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.hawkeye.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.hawkeye.name }}
+    spec:
+      containers:
+        - name: {{ .Values.hawkeye.name }}
+          image: {{ .Values.hawkeye.image }}:{{ default .Chart.AppVersion .Values.version }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.hawkeye.name }}-secrets

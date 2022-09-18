@@ -9,10 +9,29 @@ You need to have the following installed:
 - Docker & Docker Compose
 - Cargo
 - (Optional) sea-orm-cli (`cargo install sea-orm-cli@0.9.2`)
+- (Optional) Minikube, Helm, Kubectl
 
 ## Run locally
+First, set up local environment variables:
 ```bash
-docker-compose --env-file .env up -d --build
+cp .env.example .env
+# modify webhook URL in env
+source .env
+```
+
+With Docker Compose:
+```bash
+make up
+```
+
+With Minikube:
+```bash
+minikube start
+
+# First time setup only
+make bootstrap
+
+make install
 ```
 
 ## Migrations

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.hawkeyedb.name }}-pvc
+  labels:
+    app: {{ .Values.hawkeyedb.name }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.hawkeyedb.storage }}

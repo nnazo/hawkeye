@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.hawkeyedb.name }}
+  labels:
+    app: {{ .Values.hawkeyedb.name }}
+spec:
+  replicas: {{ .Values.hawkeyedb.replicas }}
+  serviceName: {{ .Values.hawkeyedb.name }}-service
+  selector:
+    matchLabels:
+      app: {{ .Values.hawkeyedb.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.hawkeyedb.name }}
+    spec:
+      initContainers:
+        - name: postgres-data-permission-fix
+          image: busybox
+          command: ["/bin/chmod","-R","777", "/data"]
+          volumeMounts:
+          - name: {{ .Values.hawkeyedb.name }}-data
+            mountPath: /data
+      containers:
+        - name: postgres
+          image: postgres:14
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          ports:
+            - containerPort: {{ .Values.hawkeyedb.containerPort }}
+          volumeMounts:
+            - name: {{ .Values.hawkeyedb.name }}-data
+              mountPath: /var/lib/postgresql/data
+              subPath: postgres
+          envFrom:
+            - secretRef:
+                name: {{ .Values.hawkeye.name }}-secrets
+      volumes:
+        - name: {{ .Values.hawkeyedb.name }}-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.hawkeyedb.name }}-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.hawkeyedb.name }}-service
+  labels:
+    app: {{ .Values.hawkeyedb.name }}
+spec:
+  selector:
+    app: {{ .Values.hawkeyedb.name }}
+  ports:
+    - protocol: TCP
+      port: 54320
+      targetPort: {{ .Values.hawkeyedb.containerPort }}
+

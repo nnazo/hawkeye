@@ -1,0 +1,21 @@
+# Default values for hawkeye-chart.
+# version: ""
+hawkeye:
+  name: hawkeye
+  replicas: 1
+  image: hawkeye
+  migration:
+    image: hawkeyedb-migration
+hawkeyedb:
+  name: hawkeyedb
+  replicas: 1
+  storage: 3Gi
+  containerPort: 5432
+imagePullPolicy: IfNotPresent
+secrets:
+  POSTGRES_DB: hawkeyedb
+  POSTGRES_USER: hawkeye
+  POSTGRES_PASSWORD: secret
+  DATABASE_URL: postgresql://hawkeye:secret@hawkeyedb-service:54320/hawkeyedb
+  NATALIE_WEBHOOK_URL: https://some-webhook-url.com
+  BROWSER_DRIVER_URL: http://localhost:4444
