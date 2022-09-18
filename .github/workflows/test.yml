@@ -3,6 +3,7 @@ on:
   push:
     paths-ignore:
       - "**.md"
+      - "chart/*"
 
 jobs:
   # Run rustfmt
