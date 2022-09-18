@@ -1,7 +1,9 @@
 use crate::util::Context;
 use anyhow::Result;
 use serenity::json::Value;
+use tracing::instrument;
 
+#[instrument]
 pub async fn send(ctx: &Context, embed: Value) -> Result<()> {
     let wait = false;
     ctx.webhook

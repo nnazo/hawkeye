@@ -3,6 +3,7 @@ use sea_orm::{Database, DatabaseConnection};
 use serenity::{http::Http, model::webhook::Webhook};
 use std::env;
 
+#[derive(Debug)]
 pub struct Context {
     pub db: DatabaseConnection,
     pub webhook: Webhook,

@@ -1009,6 +1009,8 @@ dependencies = [
  "serenity",
  "thiserror",
  "tokio",
+ "tracing",
+ "tracing-subscriber",
  "uuid",
 ]
 

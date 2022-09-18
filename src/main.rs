@@ -2,7 +2,7 @@
 
 use std::collections::HashSet;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use hawkeye_entity as entity;
 use hawkeye_entity::prelude::Article as ArticleEntity;
 use sea_orm::{ActiveValue::NotSet, ColumnTrait, EntityTrait, QueryFilter, QuerySelect, Set};
@@ -17,11 +17,17 @@ use natalie::{Article, NATALIE_SELECTOR, NATALIE_URLS};
 mod webhook;
 
 mod util;
+use tracing::{instrument, Level};
 use util::Context;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let ctx = Context::new_from_env().await?;
+
+    tracing_subscriber::fmt()
+        .with_max_level(Level::INFO)
+        .try_init()
+        .map_err(|e| anyhow!("{:?}", e))?;
 
     let mut interval = time::interval(Duration::from_secs(60));
     let mut i = 0;
@@ -29,13 +35,14 @@ async fn main() -> Result<()> {
         interval.tick().await;
 
         if let Err(err) = fetch_and_notify(&ctx, i).await {
-            eprintln!("{err:?}");
+            tracing::error!("{err:?}");
         }
 
         i = (i + 1) % NATALIE_URLS.len();
     }
 }
 
+#[instrument]
 async fn fetch_and_notify(ctx: &Context, i: usize) -> Result<()> {
     let articles = fetch_and_select::<Article>(NATALIE_URLS[i], &NATALIE_SELECTOR).await?;
     let urls = articles.iter().map(|a| &*a.url);
