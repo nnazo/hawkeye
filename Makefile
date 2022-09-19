@@ -20,3 +20,8 @@ bootstrap:
 
 psql:
 	kubectl -n hawkeye exec -it $$(kubectl -n hawkeye get pods | grep hawkeyedb-0 | awk '{ print $$1 }') -- psql -U $(POSTGRES_USER) -d $(POSTGRES_DB)
+
+release:
+	git commit -m "Release $(VERSION)"
+	git tag -a $(VERSION) -m "Release $(VERSION)" HEAD
+	git push --follow-tags
